@@ -1,11 +1,11 @@
 /*
-SoftwareSerial_ExternalInts.cpp (formerly NewSoftSerial.cpp) - 
+SoftwareSerial_ExtInts.cpp (formerly NewSoftSerial.cpp) -
 Multi-instance software serial library for Arduino/Wiring
 -- Interrupt-driven receive and other improvements by ladyada
    (http://ladyada.net)
 -- Tuning, circular buffer, derivation from class Print/Stream,
    multi-instance support, porting to 8MHz processors,
-   various optimizations, PROGMEM delay tables, inverse logic and 
+   various optimizations, PROGMEM delay tables, inverse logic and
    direct port writing by Mikal Hart (http://www.arduiniana.org)
 -- Pin change interrupt macros by Paul Stoffregen (http://www.pjrc.com)
 -- 20MHz processor support by Garrett Mace (http://www.macetech.com)
@@ -35,22 +35,22 @@ http://arduiniana.org.
 #define _DEBUG 0
 #define _DEBUG_PIN1 11
 #define _DEBUG_PIN2 13
-// 
+//
 // Includes
-// 
+//
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 #include <Arduino.h>
-#include <SoftwareSerial_ExternalInts.h>
+#include <SoftwareSerial_ExtInts.h>
 #include <util/delay_basic.h>
 
 //
 // Statics
 //
-SoftwareSerial_ExternalInts *SoftwareSerial_ExternalInts::active_object = 0;
-uint8_t SoftwareSerial_ExternalInts::_receive_buffer[_SS_MAX_RX_BUFF]; 
-volatile uint8_t SoftwareSerial_ExternalInts::_receive_buffer_tail = 0;
-volatile uint8_t SoftwareSerial_ExternalInts::_receive_buffer_head = 0;
+SoftwareSerial_ExtInts *SoftwareSerial_ExtInts::active_object = 0;
+uint8_t SoftwareSerial_ExtInts::_receive_buffer[_SS_MAX_RX_BUFF];
+volatile uint8_t SoftwareSerial_ExtInts::_receive_buffer_tail = 0;
+volatile uint8_t SoftwareSerial_ExtInts::_receive_buffer_head = 0;
 
 //
 // Debugging
@@ -77,14 +77,14 @@ inline void DebugPulse(uint8_t, uint8_t) {}
 // Private methods
 //
 
-/* static */ 
-inline void SoftwareSerial_ExternalInts::tunedDelay(uint16_t delay) { 
+/* static */
+inline void SoftwareSerial_ExtInts::tunedDelay(uint16_t delay) {
   _delay_loop_2(delay);
 }
 
 // This function sets the current object as the "listening"
-// one and returns true if it replaces another 
-bool SoftwareSerial_ExternalInts::listen()
+// one and returns true if it replaces another
+bool SoftwareSerial_ExtInts::listen()
 {
   if (!_rx_delay_stopbit)
     return false;
@@ -106,7 +106,7 @@ bool SoftwareSerial_ExternalInts::listen()
 }
 
 // Stop listening. Returns true if we were actually listening.
-bool SoftwareSerial_ExternalInts::stopListening()
+bool SoftwareSerial_ExtInts::stopListening()
 {
   if (active_object == this)
   {
@@ -120,7 +120,7 @@ bool SoftwareSerial_ExternalInts::stopListening()
 //
 // The receive routine called by the interrupt handler
 //
-void SoftwareSerial_ExternalInts::recv()
+void SoftwareSerial_ExtInts::recv()
 {
 
 #if GCC_VERSION < 40302
@@ -137,7 +137,7 @@ void SoftwareSerial_ExternalInts::recv()
     "push r26 \n\t"
     "push r27 \n\t"
     ::);
-#endif  
+#endif
 
   uint8_t d = 0;
 
@@ -151,7 +151,7 @@ void SoftwareSerial_ExternalInts::recv()
     setRxIntMsk(false);
 
     // Wait approximately 1/2 of a bit width to "center" the sample
-    tunedDelay(_rx_delay_centering);
+    // tunedDelay(_rx_delay_centering);
     DebugPulse(_DEBUG_PIN2, 1);
 
     // Read each of the 8 bits
@@ -174,8 +174,8 @@ void SoftwareSerial_ExternalInts::recv()
       // save new data in buffer: tail points to where byte goes
       _receive_buffer[_receive_buffer_tail] = d; // save new byte
       _receive_buffer_tail = next;
-    } 
-    else 
+    }
+    else
     {
       DebugPulse(_DEBUG_PIN1, 1);
       _buffer_overflow = true;
@@ -206,7 +206,7 @@ void SoftwareSerial_ExternalInts::recv()
 #endif
 }
 
-uint8_t SoftwareSerial_ExternalInts::rx_pin_read()
+uint8_t SoftwareSerial_ExtInts::rx_pin_read()
 {
   return *_receivePortRegister & _receiveBitMask;
 }
@@ -216,7 +216,7 @@ uint8_t SoftwareSerial_ExternalInts::rx_pin_read()
 //
 
 /* static */
-inline void SoftwareSerial_ExternalInts::handle_interrupt()
+void SoftwareSerial_ExtInts::handle_interrupt()
 {
   if (active_object)
   {
@@ -224,29 +224,10 @@ inline void SoftwareSerial_ExternalInts::handle_interrupt()
   }
 }
 
-#if defined(PCINT0_vect)
-ISR(PCINT0_vect)
-{
-  SoftwareSerial_ExternalInts::handle_interrupt();
-}
-#endif
-
-#if defined(PCINT1_vect)
-ISR(PCINT1_vect, ISR_ALIASOF(PCINT0_vect));
-#endif
-
-#if defined(PCINT2_vect)
-ISR(PCINT2_vect, ISR_ALIASOF(PCINT0_vect));
-#endif
-
-#if defined(PCINT3_vect)
-ISR(PCINT3_vect, ISR_ALIASOF(PCINT0_vect));
-#endif
-
 //
 // Constructor
 //
-SoftwareSerial_ExternalInts::SoftwareSerial_ExternalInts(uint8_t receivePin, uint8_t transmitPin, bool inverse_logic /* = false */) : 
+SoftwareSerial_ExtInts::SoftwareSerial_ExtInts(uint8_t receivePin, uint8_t transmitPin, bool inverse_logic /* = false */) :
   _rx_delay_centering(0),
   _rx_delay_intrabit(0),
   _rx_delay_stopbit(0),
@@ -261,12 +242,12 @@ SoftwareSerial_ExternalInts::SoftwareSerial_ExternalInts(uint8_t receivePin, uin
 //
 // Destructor
 //
-SoftwareSerial_ExternalInts::~SoftwareSerial_ExternalInts()
+SoftwareSerial_ExtInts::~SoftwareSerial_ExtInts()
 {
   end();
 }
 
-void SoftwareSerial_ExternalInts::setTX(uint8_t tx)
+void SoftwareSerial_ExtInts::setTX(uint8_t tx)
 {
   // First write, then set output. If we do this the other way around,
   // the pin would be output low for a short while before switching to
@@ -279,9 +260,8 @@ void SoftwareSerial_ExternalInts::setTX(uint8_t tx)
   _transmitPortRegister = portOutputRegister(port);
 }
 
-void SoftwareSerial_ExternalInts::setRX(uint8_t rx)
+void SoftwareSerial_ExtInts::setRX(uint8_t rx)
 {
-  pinMode(rx, INPUT);
   if (!_inverse_logic)
     digitalWrite(rx, HIGH);  // pullup for normal logic!
   _receivePin = rx;
@@ -290,7 +270,7 @@ void SoftwareSerial_ExternalInts::setRX(uint8_t rx)
   _receivePortRegister = portInputRegister(port);
 }
 
-uint16_t SoftwareSerial_ExternalInts::subtract_cap(uint16_t num, uint16_t sub) {
+uint16_t SoftwareSerial_ExtInts::subtract_cap(uint16_t num, uint16_t sub) {
   if (num > sub)
     return num - sub;
   else
@@ -301,7 +281,7 @@ uint16_t SoftwareSerial_ExternalInts::subtract_cap(uint16_t num, uint16_t sub) {
 // Public methods
 //
 
-void SoftwareSerial_ExternalInts::begin(long speed)
+void SoftwareSerial_ExtInts::begin(long speed)
 {
   _rx_delay_centering = _rx_delay_intrabit = _rx_delay_stopbit = _tx_delay = 0;
 
@@ -344,6 +324,7 @@ void SoftwareSerial_ExternalInts::begin(long speed)
     // time for ISR cleanup, which makes 115200 baud at 16Mhz work more
     // reliably
     _rx_delay_stopbit = subtract_cap(bit_delay * 3 / 4, (37 + 11) / 4);
+
     #else // Timings counted from gcc 4.3.2 output
     // Note that this code is a _lot_ slower, mostly due to bad register
     // allocation choices of gcc. This works up to 57600 on 16Mhz and
@@ -353,11 +334,6 @@ void SoftwareSerial_ExternalInts::begin(long speed)
     _rx_delay_stopbit = subtract_cap(bit_delay * 3 / 4, (44 + 17) / 4);
     #endif
 
-
-    // Enable the PCINT for the entire port here, but never disable it
-    // (others might also need it, so we disable the interrupt by using
-    // the per-pin PCMSK register).
-    *digitalPinToPCICR(_receivePin) |= _BV(digitalPinToPCICRbit(_receivePin));
     // Precalculate the pcint mask register and value, so setRxIntMask
     // can be used inside the ISR without costing too much time.
     _pcint_maskreg = digitalPinToPCMSK(_receivePin);
@@ -374,7 +350,7 @@ void SoftwareSerial_ExternalInts::begin(long speed)
   listen();
 }
 
-void SoftwareSerial_ExternalInts::setRxIntMsk(bool enable)
+void SoftwareSerial_ExtInts::setRxIntMsk(bool enable)
 {
     if (enable)
       *_pcint_maskreg |= _pcint_maskvalue;
@@ -382,14 +358,14 @@ void SoftwareSerial_ExternalInts::setRxIntMsk(bool enable)
       *_pcint_maskreg &= ~_pcint_maskvalue;
 }
 
-void SoftwareSerial_ExternalInts::end()
+void SoftwareSerial_ExtInts::end()
 {
   stopListening();
 }
 
 
 // Read data from buffer
-int SoftwareSerial_ExternalInts::read()
+int SoftwareSerial_ExtInts::read()
 {
   if (!isListening())
     return -1;
@@ -404,7 +380,7 @@ int SoftwareSerial_ExternalInts::read()
   return d;
 }
 
-int SoftwareSerial_ExternalInts::available()
+int SoftwareSerial_ExtInts::available()
 {
   if (!isListening())
     return 0;
@@ -412,7 +388,7 @@ int SoftwareSerial_ExternalInts::available()
   return (_receive_buffer_tail + _SS_MAX_RX_BUFF - _receive_buffer_head) % _SS_MAX_RX_BUFF;
 }
 
-size_t SoftwareSerial_ExternalInts::write(uint8_t b)
+size_t SoftwareSerial_ExtInts::write(uint8_t b)
 {
   if (_tx_delay == 0) {
     setWriteError();
@@ -463,16 +439,16 @@ size_t SoftwareSerial_ExternalInts::write(uint8_t b)
 
   SREG = oldSREG; // turn interrupts back on
   tunedDelay(_tx_delay);
-  
+
   return 1;
 }
 
-void SoftwareSerial_ExternalInts::flush()
+void SoftwareSerial_ExtInts::flush()
 {
   // There is no tx buffering, simply return
 }
 
-int SoftwareSerial_ExternalInts::peek()
+int SoftwareSerial_ExtInts::peek()
 {
   if (!isListening())
     return -1;

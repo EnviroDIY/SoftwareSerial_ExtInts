@@ -25,9 +25,19 @@
  This example code is in the public domain.
 
  */
-#include <SoftwareSerial_ExternalInts.h>
+#include <Arduino.h>
+#include <EnableInterrupt.h>
+// #include <SoftwareSerial.h>
+// SoftwareSerial mySerial(11, -1); // RX, TX
+#include <SoftwareSerial_ExtInts.h>
+SoftwareSerial_ExtInts mySerial(11, -1); // RX, TX
 
-SoftwareSerial_ExternalInts mySerial(10, 11); // RX, TX
+// #include <NeoSWSerial.h>
+// NeoSWSerial mySerial(11, -1); // RX, TX
+// void interrupt_fxn()
+// {
+//   mySerial.rxISR(11);
+// }
 
 void setup() {
   // Open serial communications and wait for port to open:
@@ -35,21 +45,23 @@ void setup() {
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
   }
+  Serial.println("Reading software serial...");
 
+  // set the data rate for the SoftwareSerial_ExtInts port
+  mySerial.begin(9600);
 
-  Serial.println("Goodnight moon!");
+  // Enable interrupts for the recieve pin
+  pinMode(11, INPUT_PULLUP);
+  enableInterrupt(11, SoftwareSerial_ExtInts::handle_interrupt, CHANGE);
+  // enableInterrupt(11, interrupt_fxn, CHANGE);
 
-  // set the data rate for the SoftwareSerial_ExternalInts port
-  mySerial.begin(4800);
-  mySerial.println("Hello, world?");
+  // Power up a Maxbotic to get data from something
+  pinMode(22, OUTPUT);
+  digitalWrite(22, HIGH);
 }
 
 void loop() { // run over and over
   if (mySerial.available()) {
-    Serial.write(mySerial.read());
-  }
-  if (Serial.available()) {
-    mySerial.write(Serial.read());
+    Serial.println(mySerial.readStringUntil('\r'));
   }
 }
-

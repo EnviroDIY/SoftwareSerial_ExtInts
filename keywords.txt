@@ -1,5 +1,5 @@
 #######################################
-# Syntax Coloring Map for SoftwareSerial_ExternalInts
+# Syntax Coloring Map for SoftwareSerial_ExtInts
 # (formerly NewSoftSerial)
 #######################################
 
@@ -7,7 +7,7 @@
 # Datatypes (KEYWORD1)
 #######################################
 
-SoftwareSerial_ExternalInts	KEYWORD1
+SoftwareSerial_ExtInts	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
