@@ -25,18 +25,23 @@
  This example code is in the public domain.
 
  */
+
 #include <Arduino.h>
 #include <EnableInterrupt.h>
+
+#define RxPin 14
+#define TxPin -1
+
 // #include <SoftwareSerial.h>
-// SoftwareSerial mySerial(11, -1); // RX, TX
+// SoftwareSerial mySerial(RxPin, TxPin); // RX, TX
 #include <SoftwareSerial_ExtInts.h>
-SoftwareSerial_ExtInts mySerial(11, -1); // RX, TX
+SoftwareSerial_ExtInts mySerial(RxPin, TxPin); // RX, TX
 
 // #include <NeoSWSerial.h>
-// NeoSWSerial mySerial(11, -1); // RX, TX
+// NeoSWSerial mySerial(RxPin, TxPin); // RX, TX
 // void interrupt_fxn()
 // {
-//   mySerial.rxISR(11);
+//   mySerial.rxISR(RxPin);
 // }
 
 void setup() {
@@ -51,9 +56,9 @@ void setup() {
   mySerial.begin(9600);
 
   // Enable interrupts for the recieve pin
-  pinMode(11, INPUT_PULLUP);
-  enableInterrupt(11, SoftwareSerial_ExtInts::handle_interrupt, CHANGE);
-  // enableInterrupt(11, interrupt_fxn, CHANGE);
+  pinMode(RxPin, INPUT_PULLUP);
+  enableInterrupt(RxPin, SoftwareSerial_ExtInts::handle_interrupt, CHANGE);
+  // enableInterrupt(RxPin, interrupt_fxn, CHANGE);
 
   // Power up a Maxbotic to get data from something
   pinMode(22, OUTPUT);

@@ -227,7 +227,7 @@ void SoftwareSerial_ExtInts::handle_interrupt()
 //
 // Constructor
 //
-SoftwareSerial_ExtInts::SoftwareSerial_ExtInts(uint8_t receivePin, uint8_t transmitPin, bool inverse_logic /* = false */) :
+SoftwareSerial_ExtInts::SoftwareSerial_ExtInts(int8_t receivePin, int8_t transmitPin, bool inverse_logic /* = false */) :
   _rx_delay_centering(0),
   _rx_delay_intrabit(0),
   _rx_delay_stopbit(0),
@@ -247,7 +247,7 @@ SoftwareSerial_ExtInts::~SoftwareSerial_ExtInts()
   end();
 }
 
-void SoftwareSerial_ExtInts::setTX(uint8_t tx)
+void SoftwareSerial_ExtInts::setTX(int8_t tx)
 {
   // First write, then set output. If we do this the other way around,
   // the pin would be output low for a short while before switching to
@@ -260,7 +260,7 @@ void SoftwareSerial_ExtInts::setTX(uint8_t tx)
   _transmitPortRegister = portOutputRegister(port);
 }
 
-void SoftwareSerial_ExtInts::setRX(uint8_t rx)
+void SoftwareSerial_ExtInts::setRX(int8_t rx)
 {
   if (!_inverse_logic)
     digitalWrite(rx, HIGH);  // pullup for normal logic!
